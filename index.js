@@ -33,8 +33,27 @@ async function run() {
         const reviewsCollection = client.db("myRestaurantDb").collection("reviews")
         const cartCollection = client.db("myRestaurantDb").collection("carts")
 
+        // jwt api
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '1h'
+            });
+            res.send({ token });
+        })
+
+        // middlewares
+        const verifyToken = (req, res, next) => {
+            console.log('inside verify token', req.headers);
+            if (!req.headers.authorization) {
+                return res.status(401).send({ message: 'Forbidden access' })
+            }
+            const token = res.headers.authorization.split(' ')[1];
+            // next();
+        }
+
         // user related api
-        app.get('/users', async (req, res) => {
+        app.get('/users', verifyToken, async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
